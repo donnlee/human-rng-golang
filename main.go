@@ -14,8 +14,8 @@ import (
 func main() {
 
 	firstWordsPtr := flag.String("firstWords", "", "REQUIRED: First words of mnemonic (23 words by default)")
-	passphrase := flag.String("passphrase", "", "Optional passphrase to use to combine with seedphrase to create master private key")
-	singleSigBoolPtr := flag.Bool("singleSig", false, "Use single-sig instead of multi-sig (default is mainnet)")
+	passphrase := flag.String("passphrase", "", "Optional passphrase to combine with seedphrase to create master private key")
+	singleSigBoolPtr := flag.Bool("singleSig", false, "Use single-sig instead of multi-sig (default is multi-sig)")
 	testnetBoolPtr := flag.Bool("testnet", false, "Use testnet (default is mainnet)")
 	verbosityBoolPtr := flag.Bool("verbose", false, "Verbose printout (default is quiet)")
 	checksumIntPtr := flag.Int("checksum", 0, "EXPERTS ONLY: Which checksum word to append, using a 0-index.")
@@ -26,7 +26,7 @@ func main() {
 		fmt.Println("HumanRNG - Don't Trust Your Random Number Generator\n")
 		fmt.Println("Usage:")
 		fmt.Println("  go run *.go -firstWords=\"add bag cat ...\"\n")
-		order := []string{"firstWords", "testnet", "verbose", "checksum"}
+		order := []string{"firstWords", "passphrase", "singleSig", "testnet", "verbose", "checksum"}
 		for _, name := range order {
 			flag := flagSet.Lookup(name)
 			fmt.Printf("-%s\n", flag.Name)
