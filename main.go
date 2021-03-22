@@ -14,6 +14,8 @@ import (
 func main() {
 
 	firstWordsPtr := flag.String("firstWords", "", "REQUIRED: First words of mnemonic (23 words by default)")
+	passphrase := flag.String("passphrase", "", "Optional passphrase to use to combine with seedphrase to create master private key")
+	singleSigBoolPtr := flag.Bool("singleSig", false, "Use single-sig instead of multi-sig (default is mainnet)")
 	testnetBoolPtr := flag.Bool("testnet", false, "Use testnet (default is mainnet)")
 	verbosityBoolPtr := flag.Bool("verbose", false, "Verbose printout (default is quiet)")
 	checksumIntPtr := flag.Int("checksum", 0, "EXPERTS ONLY: Which checksum word to append, using a 0-index.")
@@ -79,8 +81,7 @@ func main() {
 	checksumWordToUse := validChecksums[*checksumIntPtr]
 	mnemonic := firstWords + " " + checksumWordToUse
 
-	passphrase := ""
-	seed := bip39.NewSeed(mnemonic, passphrase)
+	seed := bip39.NewSeed(mnemonic, *passphrase)
 
 	// p2wsh version bytes
 	var networkName string
@@ -91,18 +92,37 @@ func main() {
 	privkeyBytesToUse := [4]byte{}
 
 	if *testnetBoolPtr == true {
-		network = chaincfg.TestNet3Params
-		networkName = "testnet3"
-		derivationPath = "m/48'/1'/0'/2'"
-		privkeyBytesToUse = [4]byte{0x02, 0x57, 0x50, 0x48} // Vpriv
-		pubkeyBytesToUse = [4]byte{0x02, 0x57, 0x54, 0x83}  // Vpub
-
+		if *singleSigBoolPtr == true {
+			// SLIP-132 Testnet P2WPKH m/84'/1'
+			// NOTE! Testnet P2WPKH code below hasn't
+			// been tested!
+			network = chaincfg.TestNet3Params
+			networkName = "testnet3"
+			derivationPath = "m/84'/1'/0'"
+			privkeyBytesToUse = [4]byte{0x04, 0x5f, 0x18, 0xbc} // vpriv
+			pubkeyBytesToUse = [4]byte{0x04, 0x5f, 0x1c, 0xf6}  // vpub
+		} else {
+			network = chaincfg.TestNet3Params
+			networkName = "testnet3"
+			derivationPath = "m/48'/1'/0'/2'"
+			privkeyBytesToUse = [4]byte{0x02, 0x57, 0x50, 0x48} // Vpriv
+			pubkeyBytesToUse = [4]byte{0x02, 0x57, 0x54, 0x83}  // Vpub
+		}
 	} else {
-		network = chaincfg.MainNetParams
-		networkName = "mainnet"
-		derivationPath = "m/48'/0'/0'/2'"
-		privkeyBytesToUse = [4]byte{0x02, 0xaa, 0x7a, 0x99} // Zpriv
-		pubkeyBytesToUse = [4]byte{0x02, 0xaa, 0x7e, 0xd3}  // Zpub
+		if *singleSigBoolPtr == true {
+			// SLIP-132 P2WPKH m/84'/0'
+			network = chaincfg.MainNetParams
+			networkName = "mainnet"
+			derivationPath = "m/84'/0'/0'"
+			privkeyBytesToUse = [4]byte{0x04, 0xb2, 0x43, 0x0c} // zpriv
+			pubkeyBytesToUse = [4]byte{0x04, 0xb2, 0x47, 0x46}  // zpub
+		} else {
+			network = chaincfg.MainNetParams
+			networkName = "mainnet"
+			derivationPath = "m/48'/0'/0'/2'"
+			privkeyBytesToUse = [4]byte{0x02, 0xaa, 0x7a, 0x99} // Zpriv
+			pubkeyBytesToUse = [4]byte{0x02, 0xaa, 0x7e, 0xd3}  // Zpub
+		}
 	}
 
 	derivationPathSpecter := strings.Replace(
