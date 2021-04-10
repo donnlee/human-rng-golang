@@ -91,6 +91,22 @@ func main() {
 	pubkeyBytesToUse := [4]byte{}
 	privkeyBytesToUse := [4]byte{}
 
+	// BIP45 (legacy, non-segwit multisig) defines derivation path for
+	// multisig as:
+	// m / purpose' / cosigner_index / change / address_index
+	// with purpose = 45'
+	// But Specter Desktop, Electrum, Copay use these for multisig:
+	//   m/48'/0'/0'/1'
+	//   m/48'/0'/0'/2'
+	// Blue Wallet uses this for multisig:
+	//   m/48'/0'/0'/2'
+	// Ref: walletsrecovery.org
+	// m/48' are the segwit (nested & native) formats:
+	// m / purpose' / coin_type' / account' / script_type' / change / address_index
+	//   script_type 1 = nested segwit
+	//   script_type 2 = native segwit
+	// https://github.com/spesmilo/electrum/pull/4465
+
 	if *testnetBoolPtr == true {
 		if *singleSigBoolPtr == true {
 			// SLIP-132 Testnet P2WPKH m/84'/1'
